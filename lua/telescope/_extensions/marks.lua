@@ -5,6 +5,7 @@ local finders = require("telescope.finders")
 local pickers = require("telescope.pickers")
 local conf = require("telescope.config").values
 local harpoon = require("harpoon")
+local utils = require("telescope.utils")
 
 local function filter_empty_string(list)
     local next = {}
@@ -17,7 +18,7 @@ local function filter_empty_string(list)
     return next
 end
 
-local generate_new_finder = function()
+local generate_new_finder = function(opts)
     return finders.new_table({
         results = filter_empty_string(harpoon:list().items),
         entry_maker = function(entry)
@@ -29,17 +30,16 @@ local generate_new_finder = function()
             local displayer = entry_display.create({
                 separator = " - ",
                 items = {
-                    { width = 2 },
-                    { width = 50 },
-                    { remaining = true },
+                    { remaining = true }
                 },
             })
+
             local make_display = function()
                 return displayer({
-                    tostring(entry.index),
-                    line,
+                    utils.transform_path(opts, line),
                 })
             end
+
             return {
                 value = entry,
                 ordinal = line,
@@ -118,7 +118,7 @@ return function(opts)
     pickers
         .new(opts, {
             prompt_title = "harpoon marks",
-            finder = generate_new_finder(),
+            finder = generate_new_finder(opts),
             sorter = conf.generic_sorter(opts),
             previewer = conf.grep_previewer(opts),
             attach_mappings = function(_, map)
